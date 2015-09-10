@@ -13,7 +13,7 @@ character(len=9) :: fmt1,fmt2
 character(len=12):: fmt3
 
 complex(8) :: coeff,fact,a1,a2,et,tracen,etotal,ecla,emap
-complex(8) :: f1,f2,qc,av1,av2
+complex(8) :: fc1,fc2,qc,pc,av1,av2
 complex(8),dimension(:),allocatable :: pol_tot,x,p,rm,pm,f,fcla,ftra,fqua
 complex(8),dimension(:,:),allocatable :: pol,hm
 
@@ -23,7 +23,7 @@ integer,dimension(:),allocatable :: seed1,g
 
 real(8) :: gauss,dt,dt2,kondo,delta,beta,ome_max,lumda_d,eg,eb,ed,mu,e0,e1,sij,vomega
 real(8) :: step2,dnmcs,tau1,omega1,tau2,omega2,time3,lambdacheck
-real(8) :: kc,oc,pc
+real(8) :: kc,oc
 real(8),dimension(:),allocatable :: tau,time,omega,c2,kosc,ome
 real(8),dimension(:,:),allocatable :: lambda,lmd,ug,ub,ud,hc
 real(8),dimension(:,:),allocatable :: sgg,sgb,sgd,sbg,sbb,sbd,sdg,sdb,sdd
@@ -119,7 +119,7 @@ g(2) = p_j
 g(3) = p_k
 
 MonteCarlo: do mcs = 1, nmcs
-   call sampling_class(bath,beta,kosc,c2,x,p)
+   call sampling_class(bath,beta,kosc,c2,x,p,oc,qc,pc)
 
    call sampling_mapng(init,rm,pm)
    
@@ -137,7 +137,7 @@ MonteCarlo: do mcs = 1, nmcs
    
    !call get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f,fcla,ftra,fqua)
    call get_traceless_force_bath(kosc,x,c2,rm,pm,f)
-   call get_traceless_force_coupledosc(oc,qc,kc,rm,pm,f1,f2)
+   call get_traceless_force_coupledosc(oc,qc,kc,rm,pm,fc1,fc2)
    
    MolecularDynamics: do it = 1, nmds
       call get_pulsefield(np,tau,it,dt,time,g,E0,E1,omega,et)
@@ -158,7 +158,7 @@ MonteCarlo: do mcs = 1, nmcs
       qc = qc + dt*pc
 
       call update_a2(c2,x,a2)
-      v2 = 2.d0*kc*qc
+      av2 = 2.d0*kc*qc
 
 !      call get_hm2(nmap,ng,nb,mu,et,a1,a2,hs,hm)
 !      call make_hm_traceless(nmap,tracen,hm)
@@ -204,7 +204,7 @@ MonteCarlo: do mcs = 1, nmcs
 !      call get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f,fcla,ftra,fqua)
 
       call get_traceless_force_bath(kosc,x,c2,rm,pm,f)
-      call get_traceless_force_coupledosc(oc,qc,kc,rm,pm,f1,f2)
+      call get_traceless_force_coupledosc(oc,qc,kc,rm,pm,fc1,fc2)
       
       call update_p(dt2,f,p)
       pc = pc + dt2*(fc1+fc2)

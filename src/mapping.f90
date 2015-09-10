@@ -20,10 +20,10 @@ implicit none
 real(8),parameter :: eg=0, eb=240, ed=240
 
 complex(8) :: ev
-complex(8),intent(in) :: et,a1,a2,qc,av1,av2
+complex(8),intent(in) :: et,a1,a2,pc,qc,av1,av2
 complex(8),dimension(:,:),intent(out) :: hm
 
-real(8),intent(in) :: delta,mu,pc,oc
+real(8),intent(in) :: delta,mu,oc
 
 ev = 0.5d0*(pc**2 + (oc*qc)**2)
 
@@ -807,14 +807,15 @@ end select
 
 end subroutine sampling_mapng
 
-subroutine sampling_class(bath,beta,kosc,c2,x,p)
+subroutine sampling_class(bath,beta,kosc,c2,x,p,oc,qc,pc)
 implicit none
 
+complex(8),intent(out) :: qc,pc
 complex(8),dimension(:),intent(out) :: x,p
 
 integer,intent(in) :: bath
 
-real(8),intent(in) :: beta
+real(8),intent(in) :: beta,oc
 
 real(8),dimension(:),intent(in) :: kosc,c2
 
@@ -836,6 +837,13 @@ do i = 1, nosc
 
    if (bath == 1) x(i) = x(i) + c2(i)/kosc(i)
 end do
+
+uj = 0.5d0*beta*dsqrt(oc**2)
+qbeta = beta/(uj/tanh(uj))
+call gauss_noise2(gauss)
+pc = cmplx(gauss/dsqrt(qbeta),0d0)
+call gauss_noise2(gauss)
+qc = cmplx(gauss/dsqrt(qbeta*oc**2),0d0)
 
 end subroutine sampling_class
 
