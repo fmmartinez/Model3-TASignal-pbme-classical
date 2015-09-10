@@ -132,6 +132,9 @@ MonteCarlo: do mcs = 1, nmcs
    pol(ib,cnt) = pol(ib,cnt) + fact
 
    call get_a(c2,ome,x,a1,a2)
+   av1 = 2.d0*kc**2/oc**2
+   av2 = 2.d0*kc*qc
+   
    !call get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f,fcla,ftra,fqua)
    call get_traceless_force_bath(kosc,x,c2,rm,pm,f)
    call get_traceless_force_coupledosc(oc,qc,kc,rm,pm,f1,f2)
@@ -147,12 +150,15 @@ MonteCarlo: do mcs = 1, nmcs
       !write(*,fmt2) dble(hm)
 
       call update_p(dt2,f,p)
+      pc = pc + dt2*(fc1+fc2)
 
       call update_pm(dt2,hm,rm,pm)
       
       call update_x(dt,p,x)
-      
+      qc = qc + dt*pc
+
       call update_a2(c2,x,a2)
+      v2 = 2.d0*kc*qc
 
 !      call get_hm2(nmap,ng,nb,mu,et,a1,a2,hs,hm)
 !      call make_hm_traceless(nmap,tracen,hm)
@@ -201,6 +207,7 @@ MonteCarlo: do mcs = 1, nmcs
       call get_traceless_force_coupledosc(oc,qc,kc,rm,pm,f1,f2)
       
       call update_p(dt2,f,p)
+      pc = pc + dt2*(fc1+fc2)
 
       ib = it + 1
      
