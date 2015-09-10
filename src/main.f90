@@ -1,6 +1,6 @@
 program modeliiimain
 use m_map, only: iniconq_d,get_preh,sampling_class,sampling_mapng,  &
-                  get_a,get_pulsefield,get_hm2,  &
+                  get_a,get_pulsefield,get_hm,  &
                   make_hm_traceless,update_p,update_x,update_pm,update_rm,    &
                   update_a2,get_total_energy,get_traceless_force_bath, &
                   get_traceless_force_coupledosc
@@ -13,7 +13,7 @@ character(len=9) :: fmt1,fmt2
 character(len=12):: fmt3
 
 complex(8) :: coeff,fact,a1,a2,et,tracen,etotal,ecla,emap
-complex(8) :: f1,f2,qc
+complex(8) :: f1,f2,qc,av1,av2
 complex(8),dimension(:),allocatable :: pol_tot,x,p,rm,pm,f,fcla,ftra,fqua
 complex(8),dimension(:,:),allocatable :: pol,hm
 
@@ -23,7 +23,7 @@ integer,dimension(:),allocatable :: seed1,g
 
 real(8) :: gauss,dt,dt2,kondo,delta,beta,ome_max,lumda_d,eg,eb,ed,mu,e0,e1,sij,vomega
 real(8) :: step2,dnmcs,tau1,omega1,tau2,omega2,time3,lambdacheck
-real(8) :: kc,oc
+real(8) :: kc,oc,pc
 real(8),dimension(:),allocatable :: tau,time,omega,c2,kosc,ome
 real(8),dimension(:,:),allocatable :: lambda,lmd,ug,ub,ud,hc
 real(8),dimension(:,:),allocatable :: sgg,sgb,sgd,sbg,sbb,sbd,sdg,sdb,sdd
@@ -139,8 +139,10 @@ MonteCarlo: do mcs = 1, nmcs
    MolecularDynamics: do it = 1, nmds
       call get_pulsefield(np,tau,it,dt,time,g,E0,E1,omega,et)
       
-      call get_hm2(nmap,ng,nb,mu,et,a1,a2,hs,hm)
-      call make_hm_traceless(nmap,tracen,hm)
+!      call get_hm2(nmap,ng,nb,mu,et,a1,a2,hs,hm)
+!      call make_hm_traceless(nmap,tracen,hm)
+      call get_hm(delta,mu,et,a1,a2,av1,av2,pc,oc,qc,hm)
+      call make_hm_traceless(hm,tracen)
       !write(*,*) 'hm'
       !write(*,fmt2) dble(hm)
 
@@ -152,8 +154,10 @@ MonteCarlo: do mcs = 1, nmcs
       
       call update_a2(c2,x,a2)
 
-      call get_hm2(nmap,ng,nb,mu,et,a1,a2,hs,hm)
-      call make_hm_traceless(nmap,tracen,hm)
+!      call get_hm2(nmap,ng,nb,mu,et,a1,a2,hs,hm)
+!      call make_hm_traceless(nmap,tracen,hm)
+      call get_hm(delta,mu,et,a1,a2,av1,av2,pc,oc,qc,hm)
+      call make_hm_traceless(hm,tracen)
 
       call update_rm(dt,hm,pm,rm)
 

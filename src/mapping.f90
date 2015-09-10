@@ -6,13 +6,60 @@ private
 public iniconq_d,get_preh,sampling_class,sampling_mapng,get_coeff,get_fact,get_a
 public get_traceless_force_bath, get_traceless_force_coupledosc
 public get_pulsefield
-public get_hm2,make_hm_traceless
+public get_hm,make_hm_traceless
 public update_p,update_x,update_pm,update_rm,update_a2
 public get_total_energy
 
 real(8),parameter :: pi=3.1415926535d0
 
 contains
+
+subroutine get_hm(delta,mu,et,a1,a2,av1,av2,pc,oc,qc,hm)
+implicit none
+
+real(8),parameter :: eg=0, eb=240, ed=240
+
+complex(8) :: ev
+complex(8),intent(in) :: et,a1,a2,qc,av1,av2
+complex(8),dimension(:,:),intent(out) :: hm
+
+real(8),intent(in) :: delta,mu,pc,oc
+
+ev = 0.5d0*(pc**2 + (oc*qc)**2)
+
+hm = 0d0
+!1 x 1
+hm(1,1) = eg + ev
+!1 x 2
+hm(1,2) = -mu*et
+!1 x 3
+!this part is zero
+!2 x 1
+hm(2,1) = hm(1,2)
+!2 x 2
+hm(2,2) = eb + ev + av1 - av2
+!2 x 3
+hm(2,3) = delta
+!3 x 1
+!this part is zero
+!3 x 2
+hm(3,2) = hm(2,3)
+!3 x 3
+hm(3,3) = ed + ev + a1 + a2 + 0.25d0*av1 - 0.5d0*av2
+
+end subroutine get_hm
+
+subroutine make_hm_traceless(hm,tracen)
+implicit none
+
+complex(8),intent(inout) :: tracen
+complex(8),dimension(:,:),intent(inout) :: hm
+
+tracen = (hm(1,1) + hm(2,2) + hm(3,3))/3d0
+hm(1,1) = hm(1,1) - tracen
+hm(2,2) = hm(2,2) - tracen
+hm(3,3) = hm(3,3) - tracen
+end subroutine make_hm_traceless
 
 subroutine get_traceless_force_coupledosc(oc,qc,kc,rm,pm,f1,f2)
 implicit none
@@ -499,27 +546,6 @@ do i = ng+nb+1, nmap
       hm(i,i) = hm(i,i) + (a1+a2)
 end do
 end subroutine get_hm2
-
-subroutine make_hm_traceless(nmap,trace,hm)
-implicit none
-
-complex(8),intent(out) :: trace
-complex(8),dimension(:,:),intent(inout) :: hm
-
-integer :: nmap,i
-
-trace = cmplx(0d0,0d0)
-do i = 1, nmap
-   trace = trace + hm(i,i)
-end do
-
-trace = trace/nmap
-
-do i = 1, nmap
-   hm(i,i) = hm(i,i) - trace
-end do
-
-end subroutine make_hm_traceless
 
 subroutine get_pulsefield(np,tau,it,dt,time,g,e0,e1,omega,et)
 implicit none
