@@ -4,7 +4,7 @@ implicit none
 private
 
 public iniconq_d,get_preh,sampling_class,sampling_mapng,get_coeff,get_fact,get_a
-public get_force_traceless
+public get_traceless_force_bath, get_traceless_force_coupledosc
 public get_pulsefield
 public get_hm2,make_hm_traceless
 public update_p,update_x,update_pm,update_rm,update_a2
@@ -13,6 +13,42 @@ public get_total_energy
 real(8),parameter :: pi=3.1415926535d0
 
 contains
+
+subroutine get_traceless_force_coupledosc(oc,qc,kc,rm,pm,f1,f2)
+implicit none
+
+complex(8),intent(in) :: qc
+complex(8),intent(in),dimension(:) :: rm,pm
+complex(8),intent(out) :: f1,f2
+
+real(8),intent(in) :: oc,kc
+
+f1 = -oc**2*qc + kc
+f2 = kc*((rm(2)**2+pm(2)**2-1d0) + (rm(1)**2+pm(1)**2-1d0))
+
+end subroutine get_traceless_force_coupledosc
+
+subroutine get_traceless_force_bath(kosc,x,c2,rm,pm,f)
+implicit none
+
+complex(8),dimension(:),intent(out) :: f
+complex(8),dimension(:),intent(in) :: x,rm,pm
+
+integer :: j,n
+
+real(8) :: trace
+real(8),dimension(:),intent(in) :: kosc,c2
+
+n = size(kosc)
+
+f = 0d0
+do j = 1, n
+   trace = -2d0*c2(j)/3d0
+   f(j) = -kosc(j)*x(j) - trace*(0.5d0*(rm(1)**2 + pm(1)**2 + rm(2)**2 + pm(2)**2 - 2d0*rm(3)**2 - 2d0*pm(3)**2) - 1d0)
+end do
+
+end subroutine get_traceless_force_bath
+
 
 subroutine get_total_energy(nosc,nmap,kosc,p,x,hm,trace,rm,pm,h,hcl,hma)
 implicit none

@@ -1,8 +1,9 @@
 program modeliiimain
 use m_map, only: iniconq_d,get_preh,sampling_class,sampling_mapng,  &
-                  get_a,get_force_traceless,get_pulsefield,get_hm2,  &
+                  get_a,get_pulsefield,get_hm2,  &
                   make_hm_traceless,update_p,update_x,update_pm,update_rm,    &
-                  update_a2,get_total_energy
+                  update_a2,get_total_energy,get_traceless_force_bath, &
+                  get_traceless_force_coupledosc
 implicit none
 
 real(8),parameter :: pi=3.1415926535d0, twopi = 2d0*pi
@@ -12,6 +13,7 @@ character(len=9) :: fmt1,fmt2
 character(len=12):: fmt3
 
 complex(8) :: coeff,fact,a1,a2,et,tracen,etotal,ecla,emap
+complex(8) :: f1,f2,qc
 complex(8),dimension(:),allocatable :: pol_tot,x,p,rm,pm,f,fcla,ftra,fqua
 complex(8),dimension(:,:),allocatable :: pol,hm
 
@@ -21,6 +23,7 @@ integer,dimension(:),allocatable :: seed1,g
 
 real(8) :: gauss,dt,dt2,kondo,delta,beta,ome_max,lumda_d,eg,eb,ed,mu,e0,e1,sij,vomega
 real(8) :: step2,dnmcs,tau1,omega1,tau2,omega2,time3,lambdacheck
+real(8) :: kc,oc
 real(8),dimension(:),allocatable :: tau,time,omega,c2,kosc,ome
 real(8),dimension(:,:),allocatable :: lambda,lmd,ug,ub,ud,hc
 real(8),dimension(:,:),allocatable :: sgg,sgb,sgd,sbg,sbb,sbd,sdg,sdb,sdd
@@ -129,8 +132,10 @@ MonteCarlo: do mcs = 1, nmcs
    pol(ib,cnt) = pol(ib,cnt) + fact
 
    call get_a(c2,ome,x,a1,a2)
-   call get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f,fcla,ftra,fqua)
-
+   !call get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f,fcla,ftra,fqua)
+   call get_traceless_force_bath(kosc,x,c2,rm,pm,f)
+   call get_traceless_force_coupledosc(oc,qc,kc,rm,pm,f1,f2)
+   
    MolecularDynamics: do it = 1, nmds
       call get_pulsefield(np,tau,it,dt,time,g,E0,E1,omega,et)
       
@@ -186,8 +191,11 @@ MonteCarlo: do mcs = 1, nmcs
       !   end if
       !end if
 
-      call get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f,fcla,ftra,fqua)
+!      call get_force_traceless(nmap,ng,nb,lld,kosc,x,c2,rm,pm,f,fcla,ftra,fqua)
 
+      call get_traceless_force_bath(kosc,x,c2,rm,pm,f)
+      call get_traceless_force_coupledosc(oc,qc,kc,rm,pm,f1,f2)
+      
       call update_p(dt2,f,p)
 
       ib = it + 1
