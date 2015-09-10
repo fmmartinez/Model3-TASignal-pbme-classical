@@ -123,7 +123,7 @@ MonteCarlo: do mcs = 1, nmcs
 !   call get_coeff(ng,beta,vomega,rm,pm,coeff)
    coeff = rm(1)**2 + pm(1)**2 - 0.5d0   
 !   call get_fact(ng,nb,coeff,llgb,llbg,mu,rm,pm,fact)
-   fact = mu*coeff*2d0*(rm(1)*rm(2) + pm(1)*pm(2) - 1d0)
+   fact = mu*coeff*2d0*(rm(1)*rm(2) + pm(1)*pm(2))
 
    ib = 1
    pol(ib,cnt) = pol(ib,cnt) + fact
@@ -193,7 +193,7 @@ MonteCarlo: do mcs = 1, nmcs
       ib = it + 1
      
 !      call get_fact(ng,nb,coeff,llgb,llbg,mu,rm,pm,fact)
-      fact = mu*coeff*2d0*(rm(1)*rm(2) + pm(1)*pm(2) - 1d0)
+      fact = mu*coeff*2d0*(rm(1)*rm(2) + pm(1)*pm(2))
       
       pol(ib,cnt) = pol(ib,cnt) + fact
 
