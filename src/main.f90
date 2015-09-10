@@ -7,6 +7,7 @@ use m_map, only: iniconq_d,sampling_class,sampling_mapng,  &
 implicit none
 
 real(8),parameter :: pi=3.1415926535d0, twopi = 2d0*pi
+real(8),parameter :: oc=37.7d0, kc=sqrt(10d0)*oc
 
 character(len=2) :: c_ng,c_nt
 character(len=9) :: fmt1,fmt2
@@ -23,7 +24,6 @@ integer,dimension(:),allocatable :: seed1,g
 
 real(8) :: gauss,dt,dt2,kondo,delta,beta,ome_max,lumda_d,eg,eb,ed,mu,e0,e1,sij,vomega
 real(8) :: step2,dnmcs,tau1,omega1,tau2,omega2,time3,lambdacheck
-real(8) :: kc,oc
 real(8),dimension(:),allocatable :: tau,time,omega,c2,kosc,ome
 real(8),dimension(:,:),allocatable :: lambda,lmd,ug,ub,ud,hc
 real(8),dimension(:,:),allocatable :: sgg,sgb,sgd,sbg,sbb,sbd,sdg,sdb,sdd
