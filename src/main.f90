@@ -1,5 +1,5 @@
 program modeliiimain
-use m_map, only: iniconq_d,get_preh,sampling_class,sampling_mapng,  &
+use m_map, only: iniconq_d,sampling_class,sampling_mapng,  &
                   get_a,get_pulsefield,get_hm,  &
                   make_hm_traceless,update_p,update_x,update_pm,update_rm,    &
                   update_a2,get_total_energy,get_traceless_force_bath, &
@@ -89,7 +89,7 @@ fmt3 = '(i6,'//trim(c_nt)//'f10.5)'
 !call get_lambda_eigenvectors(ng,nb,nd,eg,eb,ed,delta,vomega, &
 !                              sgg,sgb,sgd,sbg,sbb,sbd,sdg,sdb,sdd,lambda,hs)
 
-call get_preh(ng,nb,nd,eg,eb,ed,delta,vomega,hs)
+!call get_preh(ng,nb,nd,eg,eb,ed,delta,vomega,hs)
 
 
 !declare variables for faster calculations
