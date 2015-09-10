@@ -1,6 +1,6 @@
 program modeliiimain
-use m_map, only: iniconq_d,get_preh,sampling_class,sampling_mapng,get_coeff,  &
-                  get_fact,get_a,get_force_traceless,get_pulsefield,get_hm2,  &
+use m_map, only: iniconq_d,get_preh,sampling_class,sampling_mapng,  &
+                  get_a,get_force_traceless,get_pulsefield,get_hm2,  &
                   make_hm_traceless,update_p,update_x,update_pm,update_rm,    &
                   update_a2,get_total_energy
 implicit none
@@ -120,9 +120,10 @@ MonteCarlo: do mcs = 1, nmcs
 
    call sampling_mapng(init,rm,pm)
    
-   call get_coeff(ng,beta,vomega,rm,pm,coeff)
-   
-   call get_fact(ng,nb,coeff,llgb,llbg,mu,rm,pm,fact)
+!   call get_coeff(ng,beta,vomega,rm,pm,coeff)
+   coeff = rm(1)**2 + pm(1)**2 - 0.5d0   
+!   call get_fact(ng,nb,coeff,llgb,llbg,mu,rm,pm,fact)
+   fact = mu*coeff*2d0*(rm(1)*rm(2) + pm(1)*pm(2) - 1d0)
 
    ib = 1
    pol(ib,cnt) = pol(ib,cnt) + fact
@@ -191,7 +192,8 @@ MonteCarlo: do mcs = 1, nmcs
 
       ib = it + 1
      
-      call get_fact(ng,nb,coeff,llgb,llbg,mu,rm,pm,fact)
+!      call get_fact(ng,nb,coeff,llgb,llbg,mu,rm,pm,fact)
+      fact = mu*coeff*2d0*(rm(1)*rm(2) + pm(1)*pm(2) - 1d0)
       
       pol(ib,cnt) = pol(ib,cnt) + fact
 
