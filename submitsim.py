@@ -9,9 +9,9 @@ if len(argv) == 1:
 dataname = argv[1]
 
 #30 directories plus the zero one
-np = 31
+np = 61
 #truncation for running a short part of the trajectory (top should be less than 31)
-top = 31
+top = 61
 
 d = []
 
