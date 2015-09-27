@@ -15,7 +15,7 @@ character(len=12):: fmt3
 
 complex(8) :: coeff,fact,a1,a2,et,tracen,etotal,ecla,emap
 complex(8) :: fc1,fc2,qc,pc,av1,av2
-complex(8),dimension(:),allocatable :: pol_tot,x,p,rm,pm,f,fcla,ftra,fqua
+complex(8),dimension(:),allocatable :: pol_tot,polt,x,p,rm,pm,f,fcla,ftra,fqua
 complex(8),dimension(:,:),allocatable :: pol,hm
 
 integer :: a,b,i,j,is,it,cnt,p_i,p_j,p_k,ib,nmap,ng,nb,nd,basispc
@@ -69,9 +69,10 @@ time(3) = (time3 + nfile*step2)
 nmds = nmds + nfile*step1
 
 allocate(pol(1:nmds+1,1:2**np))
-allocate(pol_tot(1:nmds+1))
+allocate(pol_tot(1:nmds+1),polt(1:nmds+1))
 
 pol = cmplx(0d0,0d0)
+polt = cmplx(0d0,0d0)
 
 if (ng > 9) then
    write(c_ng,'(i2)') ng
@@ -134,7 +135,7 @@ MonteCarlo: do mcs = 1, nmcs
    fact = mu*coeff*2d0*(rm(1)*rm(2) + pm(1)*pm(2))
 
    ib = 1
-   pol(ib,cnt) = pol(ib,cnt) + fact
+   pol(ib,cnt) = fact
 
    call get_a(c2,ome,x,a1,a2)
    av1 = 2.d0*kc**2/oc**2
@@ -219,7 +220,7 @@ MonteCarlo: do mcs = 1, nmcs
 !      call get_fact(ng,nb,coeff,llgb,llbg,mu,rm,pm,fact)
       fact = mu*coeff*2d0*(rm(1)*rm(2) + pm(1)*pm(2))
       
-      pol(ib,cnt) = pol(ib,cnt) + fact
+      pol(ib,cnt) = fact
 
 !      if (mcs == nmcs) then
 !         call get_total_energy(nosc,nmap,kosc,p,x,hm,tracen,rm,pm,etotal,ecla,emap)
@@ -235,7 +236,7 @@ MonteCarlo: do mcs = 1, nmcs
    end do MolecularDynamics
 
    if (overflow == .false.) then
-      print *, 'kek'
+      polt = polt + pol(1:nmds+1,cnt)
    else
       overflow = .false.
    end if
@@ -244,7 +245,7 @@ end do MonteCarlo
 dnmcs = dble(nmcs)
 open(333,file="polariz.out")
 do ib = 1, nmds + 1
-   pol_tot(ib) = pol(ib,cnt)/dnmcs
+   pol_tot(ib) = polt(ib)/dnmcs
    write(333,*) time(3), ib-1, dble(pol_tot(ib)), aimag(pol_tot(ib))
 end do
 
