@@ -20,7 +20,10 @@ complex(8),dimension(:,:),allocatable :: pol,hm
 
 integer :: a,b,i,j,is,it,cnt,p_i,p_j,p_k,ib,nmap,ng,nb,nd,basispc
 integer :: np,nmcs,mcs,nmds,seed_dimension,nosc,step1,bath,init,nfile,i_c
+integer :: overflow
 integer,dimension(:),allocatable :: seed1,g
+
+logical :: overflowcheck
 
 real(8) :: gauss,dt,dt2,kondo,delta,beta,ome_max,lumda_d,eg,eb,ed,mu,e0,e1,sij,vomega
 real(8) :: step2,dnmcs,tau1,omega1,tau2,omega2,time3,lambdacheck
@@ -118,6 +121,8 @@ g(1) = p_i
 g(2) = p_j
 g(3) = p_k
 
+overflow = 0
+overflowcheck = .false.
 MonteCarlo: do mcs = 1, nmcs
    call sampling_class(bath,beta,kosc,c2,x,p,oc,qc,pc)
 
@@ -223,8 +228,17 @@ MonteCarlo: do mcs = 1, nmcs
 
       if ((pol(ib,cnt) /= pol(ib,cnt)).or.(pol(ib,cnt)-1 == pol(ib,cnt))) then
          print *, 'there is overflow in', it, mcs
+         overflow = overflow + 1
+         overflowcheck = .true.
+         exit
       end if
    end do MolecularDynamics
+
+   if (overflow == .false.) then
+      print *, 'kek'
+   else
+      overflow = .false.
+   end if
 end do MonteCarlo
 
 dnmcs = dble(nmcs)
