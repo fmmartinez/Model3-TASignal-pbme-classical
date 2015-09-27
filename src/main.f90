@@ -249,6 +249,8 @@ do ib = 1, nmds + 1
    write(333,*) time(3), ib-1, dble(pol_tot(ib)), aimag(pol_tot(ib))
 end do
 
+print *, 'MC cycles', nmcs, 'with', overflow, 'overflows'
+
 deallocate(c2)
 deallocate(kosc)
 deallocate(ome)
