@@ -18,7 +18,7 @@ complex(8) :: fc1,fc2,qc,pc,av1,av2
 complex(8),dimension(:),allocatable :: pol_tot,polt,x,p,rm,pm,f,fcla,ftra,fqua
 complex(8),dimension(:,:),allocatable :: pol,hm
 
-integer :: a,b,i,j,is,it,cnt,p_i,p_j,p_k,ib,nmap,ng,nb,nd,basispc
+integer :: a,b,i,j,is,it,cnt,p_i,p_j,p_k,ib,nmap,ng,nb,nd,basispc,omc
 integer :: np,nmcs,mcs,nmds,seed_dimension,nosc,step1,bath,init,nfile,i_c
 integer :: overflow
 integer,dimension(:),allocatable :: seed1,g
@@ -122,6 +122,7 @@ g(1) = p_i
 g(2) = p_j
 g(3) = p_k
 
+omc = 0
 overflow = 0
 overflowcheck = .false.
 MonteCarlo: do mcs = 1, nmcs
@@ -235,14 +236,15 @@ MonteCarlo: do mcs = 1, nmcs
       end if
    end do MolecularDynamics
 
-   if (overflow == .false.) then
+   if (overflowcheck == .false.) then
       polt = polt + pol(1:nmds+1,cnt)
+      omc = omc + 1
    else
-      overflow = .false.
+      overflowcheck = .false.
    end if
 end do MonteCarlo
 
-dnmcs = dble(nmcs)
+dnmcs = dble(omc)
 open(333,file="polariz.out")
 do ib = 1, nmds + 1
    pol_tot(ib) = polt(ib)/dnmcs
