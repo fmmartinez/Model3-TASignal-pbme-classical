@@ -114,15 +114,15 @@ MC: do mcs = 1, nmcs
    
    MD: do it = 1, nmds
       gaussian=sqrt(4d0*log(2d0)/(pi*tau(1)**2))*exp(-4d0*log(2d0)*((it-0.5d0)*dt-time(1))**2/(tau(1)**2))
-      arg = omega(1)*((it-0.5d0)*dt-time(1))
+      arg = omega(1)*((it-0.5d0)*dt-time(1))*0.01745d0
       et = g(1)*gaussian*e0*cmplx(cos(arg),sin(arg))
       
       gaussian=sqrt(4d0*log(2d0)/(pi*tau(2)**2))*exp(-4d0*log(2d0)*((it-0.5d0)*dt-time(2))**2/(tau(2)**2))
-      arg = omega(2)*((it-0.5d0)*dt-time(2))
+      arg = omega(2)*((it-0.5d0)*dt-time(2))*0.01745d0
       et = et + g(2)*gaussian*e0*cmplx(cos(arg),-sin(arg))
       
       gaussian=sqrt(4d0*log(2d0)/(pi*tau(3)**2))*exp(-4d0*log(2d0)*((it-0.5d0)*dt-time(3))**2/(tau(3)**2))
-      arg = omega(3)*((it-0.5d0)*dt-time(3))
+      arg = omega(3)*((it-0.5d0)*dt-time(3))*0.01745d0
       et = et + g(3)*gaussian*e1*cmplx(cos(arg),-sin(arg))
    
       do is = 1, nosc
