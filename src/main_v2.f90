@@ -1,51 +1,65 @@
 program popmodel3
-use ifport
+use ifport, only:srand,rand
 implicit none
 
 integer,parameter :: nmap = 3
 
 real(8),parameter :: pi=3.1415926535d0, oc=37.7d0, kc=sqrt(10d0)*oc
 
-integer :: i,j,ng,nb,nd,basispc,stp,cont
+complex(8) :: coeff,a1,a2,et,fact
+complex(8) :: pc,qc,av1,av2,fc,fc1,fc2,hmtrace,etotal,eclas,equan
+complex(8),dimension(1:3) :: rm,pm
+complex(8),dimension(1:3,1:3) :: hm
+complex(8),dimension(:),allocatable :: pol,x,p,fx,polt
+
+integer :: i,j,ng,nb,nd,basispc,stp,cont,p_i,p_j,p_k,omc,nfile,step1
 integer :: np,nosc,nmcs,nmds,seed_dimension,bath,init,mcs,it,is,ib,ie,je
 integer :: overflow
+integer,dimension(:),allocatable :: g
 
 logical :: overflowcheck
 
-real(8) :: delta,ome_max,dt,lumda_d,eg,eb,ed,mu,e0,beta,time_j,taw_j,omega_j,check
-real(8) :: dt2,uj,qbeta,coeff,lambdacheck,a1,a2,et,fact1,fact2,fact3,gaussian,rtemp
-real(8) :: pc,qc,av1,av2,fc,fc1,fc2,hmtrace,etotal,eclas,equan
-real(8),dimension(1:3) :: rm,pm
-real(8),dimension(1:3,1:3) :: hm
-real(8),dimension(:),allocatable :: ome,c2,kosc,pop,pop1,pop2,pop3,x,p,fx,facn,popt,pop1t,pop2t,pop3t
-real(8),dimension(:,:),allocatable :: popn
+real(8) :: delta,ome_max,dt,kondo,lumda_d,eg,eb,ed,mu,e0,e1,beta,check,vomega
+real(8) :: dt2,uj,qbeta,lambdacheck,gaussian,rtemp,step2,tau1,omega1,tau2,omega2
+real(8) :: time3,arg
+real(8),dimension(:),allocatable :: tau,time,omega,ome,c2,kosc
 
 call iniconc()
 
 call srand(seed_dimension)
 
 allocate(ome(1:nosc),c2(1:nosc),kosc(1:nosc))
+allocate(tau(1:np),omega(1:np),time(1:np),g(1:np))
 
 call iniconq_d()
 
-allocate(popn(1:nmds+1,1:nmap),facn(1:nmap))
-allocate(pop(1:nmds+1),pop1(1:nmds+1),pop2(1:nmds+1),pop3(1:nmds+1))
-allocate(popt(1:nmds+1),pop1t(1:nmds+1),pop2t(1:nmds+1),pop3t(1:nmds+1))
+do i = 1, np-1
+   tau(i)   = tau1
+   omega(i) = omega1
+end do
+tau(np) = tau2
+omega(np) = omega2
+
+time(1) = 0.3d0
+time(2) = 0.3d0
+time(3) = (time3 + nfile*step2)
+
+nmds = nmds + nfile*step1
+
+allocate(pol(1:nmds+1),polt(1:nmds+1))
 allocate(x(1:nosc),p(1:nosc),fx(1:nosc))
 
-popn = 0d0
-pop  = 0d0
-pop1 = 0d0
-pop2 = 0d0
-pop3 = 0d0
-popt  = 0d0
-pop1t = 0d0
-pop2t = 0d0
-pop3t = 0d0
+pol  = cmplx(0d0,0d0)
+polt  = cmplx(0d0,0d0)
 
 dt  = 2d0*pi*dt
 dt2 = 0.5d0*dt
 
+g(1) = p_i
+g(2) = p_j
+g(3) = p_k
+
+omc = 0
 overflow = 0
 overflowcheck = .false.
 MC: do mcs = 1, nmcs
@@ -55,8 +69,8 @@ MC: do mcs = 1, nmcs
       
       qbeta = beta/(uj/tanh(uj))
       
-      p(is) = gauss_noise2()/dsqrt(qbeta)
-      x(is) = gauss_noise2()/dsqrt(qbeta*kosc(is))
+      p(is) = cmplx(gauss_noise2()/dsqrt(qbeta),0d0)
+      x(is) = cmplx(gauss_noise2()/dsqrt(qbeta*kosc(is)),0d0)
       
       if(bath == 1) x(is)=x(is)+c2(is)/kosc(is)
    end do
@@ -64,13 +78,13 @@ MC: do mcs = 1, nmcs
 !sampling oscillator coupled 
    uj = 0.5d0*beta*dsqrt(oc**2)
    qbeta = beta/(uj/tanh(uj))
-   pc = gauss_noise2()/dsqrt(qbeta)
-   qc = gauss_noise2()/dsqrt(qbeta*oc**2)
+   pc = cmplx(gauss_noise2()/dsqrt(qbeta),0d0)
+   qc = cmplx(gauss_noise2()/dsqrt(qbeta*oc**2),0d0)
 !sampling mapping variables
    if (init == 3) then
       do i = 1, nmap
-         rm(i) = gauss_noise2()/sqrt(2d0)
-         pm(i) = gauss_noise2()/sqrt(2d0)
+         rm(i) = cmplx(gauss_noise2()/sqrt(2d0),0d0)
+         pm(i) = cmplx(gauss_noise2()/sqrt(2d0),0d0)
       end do
    else
       rm = 0d0
@@ -84,15 +98,12 @@ MC: do mcs = 1, nmcs
    
    ib = 1
 
-   call get_facts_pop(coeff,rm,pm,fact1,fact2,fact3)
+   call get_facts_pol(mu,coeff,rm,pm,fact)
+ 
+   pol(ib) = fact
    
-   popt(ib)  = (fact1+fact2+fact3)
-   pop1t(ib) = (fact1)
-   pop2t(ib) = (fact2)
-   pop3t(ib) = (fact3)
-   
-   a1 = 0d0
-   a2 = 0d0
+   a1 = cmplx(0d0,0d0)
+   a2 = cmplx(0d0,0d0)
    do is=1, nosc 
       a1 = a1 + 2.d0*c2(is)**2/ome(is)**2
       a2 = a2 + 2.d0*c2(is)*x(is)
@@ -101,12 +112,18 @@ MC: do mcs = 1, nmcs
    av1 = 2.d0*kc**2/oc**2
    av2 = 2.d0*kc*qc
    
-   print *, mcs, qc, pc
    MD: do it = 1, nmds
-   if (mcs == 1) write (335,'(i5,4f20.6)') it, qc, pc, fc1, fc2
-   if (mcs == 2) write (336,'(i5,6f20.6)') it, rm, pm
-      gaussian=sqrt(4.d0*log(2.d0)/(pi*taw_j**2))*exp(-4.d0*log(2.d0)*((it-0.5d0)*dt-time_j)**2/(taw_j**2))
-      et = gaussian*e0*cos(omega_j*((it-0.5d0)*dt-time_j))
+      gaussian=sqrt(4d0*log(2d0)/(pi*tau(1)**2))*exp(-4d0*log(2d0)*((it-0.5d0)*dt-time(1))**2/(tau(1)**2))
+      arg = omega(1)*((it-0.5d0)*dt-time(1))
+      et = g(1)*gaussian*e0*cmplx(cos(arg),sin(arg))
+      
+      gaussian=sqrt(4d0*log(2d0)/(pi*tau(2)**2))*exp(-4d0*log(2d0)*((it-0.5d0)*dt-time(2))**2/(tau(2)**2))
+      arg = omega(2)*((it-0.5d0)*dt-time(2))
+      et = et + g(2)*gaussian*e0*cmplx(cos(arg),-sin(arg))
+      
+      gaussian=sqrt(4d0*log(2d0)/(pi*tau(3)**2))*exp(-4d0*log(2d0)*((it-0.5d0)*dt-time(3))**2/(tau(3)**2))
+      arg = omega(3)*((it-0.5d0)*dt-time(3))
+      et = et + g(3)*gaussian*e1*cmplx(cos(arg),-sin(arg))
    
       do is = 1, nosc
          p(is) = p(is) + dt2*fx(is)
@@ -123,7 +140,7 @@ MC: do mcs = 1, nmcs
       end do
       qc = qc + dt*pc
 
-      a2=0.d0
+      a2=cmplx(0d0,0d0)
       do is = 1, nosc
           a2 = a2 + 2.d0*c2(is)*x(is)
       end do
@@ -146,14 +163,11 @@ MC: do mcs = 1, nmcs
 
       ib = it + 1
       
-      call get_facts_pop(coeff,rm,pm,fact1,fact2,fact3)
+      call get_facts_pol(mu,coeff,rm,pm,fact)
       
-      popt(ib)  = (fact1+fact2+fact3)
-      pop1t(ib) = (fact1)
-      pop2t(ib) = (fact2)
-      pop3t(ib) = (fact3)
+      polt(ib)  = fact
 
-      if ((popt(ib) /= popt(ib)).or.(popt(ib)-1 == popt(ib))) then
+      if ((polt(ib) /= polt(ib)).or.(polt(ib)-1 == polt(ib))) then
          print *, it, qc
          print *, hm
          print *, rm
@@ -185,34 +199,24 @@ MC: do mcs = 1, nmcs
    end do MD
 
    if (overflowcheck == .false.) then
-      pop = pop + popt
-      pop1 = pop1 + pop1t
-      pop2 = pop2 + pop2t
-      pop3 = pop3 + pop3t
+      pol = pol + polt
+      omc = omc + 1
    else
       overflowcheck = .false.
    end if
-
-   if (mod(mcs,1000) == 0) then
-      open(444,file='temp.out')
-      do i = 1, nmds+1
-         write(444,'(i10,4f20.9)') i-1,pop1(i)/pop(i),pop2(i)/pop(i),pop3(i)/pop(i),pop(i)
-      end do
-      close(444)
-   end if
 end do MC
 
+open(333,file='polariz.out')
 do ib = 1, nmds+1
-   pop1(ib) = pop1(ib)/pop(ib)
-   pop2(ib) = pop2(ib)/pop(ib)
-   pop3(ib) = pop3(ib)/pop(ib)
-   write(333,'(i10,4f20.9)') ib-1, pop1(ib),pop2(ib),pop3(ib),pop(ib)!/dnmcs
+   pol(ib) = pol(ib)/dble(omc)
+   write(333,*) time(3), ib-1, dble(pol(ib)), aimag(pol(ib))
 end do
+close(333)
 
 print *, 'MC cycles', nmcs, 'with', overflow, 'overflows'
 
 deallocate(ome,c2,kosc)
-deallocate(pop,pop1,pop2,pop3)
+deallocate(pol,polt)
 deallocate(x,p)
 
 contains
@@ -224,9 +228,9 @@ integer :: i, j
 integer,intent(in) :: nmap
 
 real(8),intent(in) :: dt
-real(8),dimension(:),intent(in) :: pm
-real(8),dimension(:),intent(inout) :: rm
-real(8),dimension(:,:),intent(in) :: hm
+complex(8),dimension(:),intent(in) :: pm
+complex(8),dimension(:),intent(inout) :: rm
+complex(8),dimension(:,:),intent(in) :: hm
 
 do i = 1, nmap
    do j = 1, nmap
@@ -243,9 +247,9 @@ integer :: i, j
 integer,intent(in) :: nmap
 
 real(8),intent(in) :: dt2
-real(8),dimension(:),intent(in) :: rm
-real(8),dimension(:),intent(inout) :: pm
-real(8),dimension(:,:),intent(in) :: hm
+complex(8),dimension(:),intent(in) :: rm
+complex(8),dimension(:),intent(inout) :: pm
+complex(8),dimension(:,:),intent(in) :: hm
 
 do i = 1, nmap
    do j = 1, nmap
@@ -255,18 +259,18 @@ end do
 
 end subroutine evolve_pm
 
-subroutine get_facts_pop(coeff,rm,pm,fact1,fact2,fact3)
+subroutine get_facts_pol(mu,coeff,rm,pm,fact)
 implicit none
 
-real(8),intent(in) :: coeff
-real(8),intent(out) :: fact1,fact2,fact3
-real(8),dimension(:),intent(in) :: rm,pm
+complex(8),intent(in) :: coeff
+complex(8),intent(out) :: fact
+complex(8),dimension(:),intent(in) :: rm,pm
 
-fact1 = coeff*(rm(1)**2 + pm(1)**2 - 1d0)
-fact2 = coeff*(rm(2)**2 + pm(2)**2 - 1d0)
-fact3 = coeff*(rm(3)**2 + pm(3)**2 - 1d0)
+real(8), intent(in) :: mu
 
-end subroutine get_facts_pop
+fact = mu*coeff*2d0*(rm(1)*rm(2) + pm(1)*pm(2))
+
+end subroutine get_facts_pol
 
 function kronecker_delta(i,j) result (d)
 implicit none
@@ -305,9 +309,11 @@ implicit none
 
 integer :: j,n
 
+complex(8),dimension(:),intent(in) :: x,rm,pm
+complex(8),dimension(:),intent(out) :: f
+
 real(8) :: trace
-real(8),dimension(:),intent(in) :: kosc,x,c2,rm,pm
-real(8),dimension(:),intent(out) :: f
+real(8),dimension(:),intent(in) :: kosc,c2
 
 n = size(x)
 
@@ -337,9 +343,11 @@ end subroutine get_force_coupledosc
 
 subroutine get_traceless_force_coupledosc(oc,qc,kc,rm,pm,f1,f2)
 
-real(8),intent(in) :: oc,qc,kc
-real(8),intent(in),dimension(:) :: rm,pm
-real(8),intent(out) :: f1,f2
+real(8),intent(in) :: oc,kc
+
+complex(8),intent(in) :: qc
+complex(8),intent(in),dimension(:) :: rm,pm
+complex(8),intent(out) :: f1,f2
 
 f1 = -oc**2*qc + kc
 f2 = kc*((rm(2)**2+pm(2)**2-1d0) + (rm(1)**2+pm(1)**2-1d0))
@@ -375,13 +383,15 @@ implicit none
 
 real(8),parameter :: eg=0, eb=240, ed=240
 
-real(8) :: ev
-real(8),intent(in) :: delta,mu,et,a1,a2,pc,oc,qc,av1,av2
-real(8),dimension(:,:),intent(out) :: hm
+complex(8) :: ev
+complex(8),intent(in) :: et,a1,a2,pc,qc,av1,av2
+complex(8),dimension(:,:),intent(out) :: hm
+
+real(8),intent(in) :: delta,mu,oc
 
 ev = 0.5d0*(pc**2 + (oc*qc)**2)
 
-hm = 0d0
+hm = cmplx(0d0,0d0)
 !1 x 1
 hm(1,1) = eg + ev
 !1 x 2
@@ -406,8 +416,8 @@ end subroutine get_hm
 subroutine make_hm_traceless(hm,trace)
 implicit none
 
-real(8),intent(inout) :: trace
-real(8),dimension(:,:),intent(inout) :: hm
+complex(8),intent(inout) :: trace
+complex(8),dimension(:,:),intent(inout) :: hm
 
 trace = hm(1,1) + hm(2,2) + hm(3,3)
 hm(1,1) = hm(1,1) - trace/3d0
@@ -420,19 +430,21 @@ implicit none
 
 integer :: i
 
-open (666,file='md.in')
+open (666,file='map.in')
 read(666,*)
-read(666,*) np,delta,nosc,ome_max
+read(666,*) np,delta,kondo,nosc,ome_max
 read(666,*)
 read(666,*) nmcs,nmds,seed_dimension,dt,lumda_d
 read(666,*)
-read(666,*) eg,eb,ed,mu,e0,beta
+read(666,*) eg,eb,ed,mu,e0,e1,beta,vomega
 read(666,*)
-read(666,*) time_j,taw_j,omega_j 
+read(666,*) tau1,omega1,tau2,omega2,time3,step1,step2
 read(666,*)
-read(666,*) bath,init
+read(666,*) bath,init,nfile
 read(666,*)
-read(666,*) basispc,ng,nb,nd,cont
+read(666,*) ng,nb,nd
+read(666,*)
+read(666,*) p_i, p_j, p_k
 close(666)
 
 !call random_seed(size=seed_dimension)
