@@ -102,7 +102,7 @@ MC: do mcs = 1, nmcs
 
    call get_facts_pol(mu,coeff,rm,pm,fact)
  
-   pol(ib) = fact
+   polt(ib) = fact
    
    a1 = cmplx(0d0,0d0)
    a2 = cmplx(0d0,0d0)
