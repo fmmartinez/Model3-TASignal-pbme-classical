@@ -6,11 +6,13 @@ integer,parameter :: nmap = 3
 
 real(8),parameter :: pi=3.1415926535d0, oc=37.7d0, kc=sqrt(10d0)*oc
 
-complex(8) :: coeff,a1,a2,et,fact
-complex(8) :: pc,qc,av1,av2,fc,fc1,fc2,hmtrace,etotal,eclas,equan
-complex(8),dimension(1:3) :: rm,pm
-complex(8),dimension(1:3,1:3) :: hm
-complex(8),dimension(:),allocatable :: pol,x,p,fx,polt
+complex(8) :: et
+
+real(8) :: coeff,a1,a2,fact
+real(8) :: pc,qc,av1,av2,fc,fc1,fc2,hmtrace,etotal,eclas,equan
+real(8),dimension(1:3) :: rm,pm
+real(8),dimension(1:3,1:3) :: hm
+real(8),dimension(:),allocatable :: pol,x,p,fx,polt
 
 integer :: i,j,ng,nb,nd,basispc,stp,cont,p_i,p_j,p_k,omc,nfile,step1
 integer :: np,nosc,nmcs,nmds,seed_dimension,bath,init,mcs,it,is,ib,ie,je
@@ -209,7 +211,7 @@ end do MC
 open(333,file='polariz.out')
 do ib = 1, nmds+1
    pol(ib) = pol(ib)/dble(omc)
-   write(333,*) time(3), ib-1, dble(pol(ib)), aimag(pol(ib))
+   write(333,*) time(3), ib-1, dble(pol(ib))!, aimag(pol(ib))
 end do
 close(333)
 
@@ -228,9 +230,9 @@ integer :: i, j
 integer,intent(in) :: nmap
 
 real(8),intent(in) :: dt
-complex(8),dimension(:),intent(in) :: pm
-complex(8),dimension(:),intent(inout) :: rm
-complex(8),dimension(:,:),intent(in) :: hm
+real(8),dimension(:),intent(in) :: pm
+real(8),dimension(:),intent(inout) :: rm
+real(8),dimension(:,:),intent(in) :: hm
 
 do i = 1, nmap
    do j = 1, nmap
@@ -247,9 +249,9 @@ integer :: i, j
 integer,intent(in) :: nmap
 
 real(8),intent(in) :: dt2
-complex(8),dimension(:),intent(in) :: rm
-complex(8),dimension(:),intent(inout) :: pm
-complex(8),dimension(:,:),intent(in) :: hm
+real(8),dimension(:),intent(in) :: rm
+real(8),dimension(:),intent(inout) :: pm
+real(8),dimension(:,:),intent(in) :: hm
 
 do i = 1, nmap
    do j = 1, nmap
@@ -262,9 +264,9 @@ end subroutine evolve_pm
 subroutine get_facts_pol(mu,coeff,rm,pm,fact)
 implicit none
 
-complex(8),intent(in) :: coeff
-complex(8),intent(out) :: fact
-complex(8),dimension(:),intent(in) :: rm,pm
+real(8),intent(in) :: coeff
+real(8),intent(out) :: fact
+real(8),dimension(:),intent(in) :: rm,pm
 
 real(8), intent(in) :: mu
 
@@ -309,8 +311,8 @@ implicit none
 
 integer :: j,n
 
-complex(8),dimension(:),intent(in) :: x,rm,pm
-complex(8),dimension(:),intent(out) :: f
+real(8),dimension(:),intent(in) :: x,rm,pm
+real(8),dimension(:),intent(out) :: f
 
 real(8) :: trace
 real(8),dimension(:),intent(in) :: kosc,c2
@@ -345,9 +347,9 @@ subroutine get_traceless_force_coupledosc(oc,qc,kc,rm,pm,f1,f2)
 
 real(8),intent(in) :: oc,kc
 
-complex(8),intent(in) :: qc
-complex(8),intent(in),dimension(:) :: rm,pm
-complex(8),intent(out) :: f1,f2
+real(8),intent(in) :: qc
+real(8),intent(in),dimension(:) :: rm,pm
+real(8),intent(out) :: f1,f2
 
 f1 = -oc**2*qc + kc
 f2 = kc*((rm(2)**2+pm(2)**2-1d0) + (rm(1)**2+pm(1)**2-1d0))
@@ -383,9 +385,11 @@ implicit none
 
 real(8),parameter :: eg=0, eb=240, ed=240
 
-complex(8) :: ev
-complex(8),intent(in) :: et,a1,a2,pc,qc,av1,av2
-complex(8),dimension(:,:),intent(out) :: hm
+complex(8) :: et
+
+real(8) :: ev
+real(8),intent(in) :: a1,a2,pc,qc,av1,av2
+real(8),dimension(:,:),intent(out) :: hm
 
 real(8),intent(in) :: delta,mu,oc
 
@@ -416,8 +420,8 @@ end subroutine get_hm
 subroutine make_hm_traceless(hm,trace)
 implicit none
 
-complex(8),intent(inout) :: trace
-complex(8),dimension(:,:),intent(inout) :: hm
+real(8),intent(inout) :: trace
+real(8),dimension(:,:),intent(inout) :: hm
 
 trace = hm(1,1) + hm(2,2) + hm(3,3)
 hm(1,1) = hm(1,1) - trace/3d0
